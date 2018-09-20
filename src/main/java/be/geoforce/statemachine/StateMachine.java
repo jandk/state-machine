@@ -37,6 +37,10 @@ public class StateMachine<S, T extends Transition<S>> {
     }
 
     public <R extends StateContainer<S>> R transition(R container, S toState, Function<R, R> onTransitioned) {
+        if (container == null || toState == null) {
+            throw new IllegalArgumentException();
+        }
+
         S currentState = container.getState();
         T transition = findTransition(currentState, toState);
         if (transition == null) {
