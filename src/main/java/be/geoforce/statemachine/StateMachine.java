@@ -42,15 +42,19 @@ public class StateMachine<S, T extends Transition<S>> {
         if (transition == null) {
             throw new IllegalStateException(String.format("Can not transition from {} to {}", currentState, toState));
         }
-        TransitionEvent beforeEvent = new TransitionEvent(TransitionEvent.TransitionEventType.BEFORE, currentState, toState, transition, container);
+        TransitionEvent beforeEvent = createEvent(TransitionEvent.TransitionEventType.BEFORE, container, toState, currentState, transition);
         applicationEventPublisher.publishEvent(beforeEvent);
 
         container.setState(toState);
         R resultContainer = onTransitioned == null ? container: onTransitioned.apply(container);
 
-        TransitionEvent afterEvent = new TransitionEvent(TransitionEvent.TransitionEventType.AFTER, currentState, toState, transition, container);
+        TransitionEvent afterEvent = createEvent(TransitionEvent.TransitionEventType.AFTER, container, toState, currentState, transition);
         applicationEventPublisher.publishEvent(afterEvent);
         return resultContainer;
+    }
+
+    protected <R extends StateContainer<S>> TransitionEvent createEvent(TransitionEvent.TransitionEventType transitionEventType, R container, S toState, S currentState, T transition) {
+        return new TransitionEvent(transitionEventType, currentState, toState, transition, container);
     }
 
     public T findTransition(S fromState, S toState) {
