@@ -41,24 +41,24 @@ public class StateMachine<S, T extends Transition<S>> {
             throw new IllegalArgumentException();
         }
 
-        S currentState = container.getState();
-        T transition = findTransition(currentState, toState);
+        S beforeState = container.getState();
+        T transition = findTransition(beforeState, toState);
         if (transition == null) {
-            throw new IllegalStateException(String.format("Can not transition from {} to {}", currentState, toState));
+            throw new IllegalStateException(String.format("Can not transition from {} to {}", beforeState, toState));
         }
-        TransitionEvent beforeEvent = createEvent(TransitionEvent.TransitionEventType.BEFORE, container, toState, currentState, transition);
+        TransitionEvent beforeEvent = createEvent(TransitionEvent.TransitionEventType.BEFORE, container, beforeState, transition);
         applicationEventPublisher.publishEvent(beforeEvent);
 
         container.setState(toState);
         R resultContainer = onTransitioned == null ? container: onTransitioned.apply(container);
 
-        TransitionEvent afterEvent = createEvent(TransitionEvent.TransitionEventType.AFTER, container, toState, currentState, transition);
+        TransitionEvent afterEvent = createEvent(TransitionEvent.TransitionEventType.AFTER, container, beforeState, transition);
         applicationEventPublisher.publishEvent(afterEvent);
         return resultContainer;
     }
 
-    protected <R extends StateContainer<S>> TransitionEvent createEvent(TransitionEvent.TransitionEventType transitionEventType, R container, S toState, S currentState, T transition) {
-        return new TransitionEvent(transitionEventType, currentState, toState, transition, container);
+    protected <R extends StateContainer<S>> TransitionEvent createEvent(TransitionEvent.TransitionEventType transitionEventType, R container, S beforeState, T transition) {
+        return new TransitionEvent(transitionEventType, beforeState, transition, container);
     }
 
     public T findTransition(S fromState, S toState) {
