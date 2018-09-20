@@ -24,12 +24,16 @@ public class StateMachine<S, T extends Transition<S>> {
                 SingleTransition<S, T> singleTransition = new SingleTransition<>(fromState, transition.getTo(), transition);
                 if (singleTransitions.contains(singleTransition)) {
                     throw new IllegalStateException(
-                            String.format("Ambiguous transition from {} to {}, multiple transitions found",
+                            String.format("Ambiguous transition from {} to {}, there is another transitions between these states",
                                     singleTransition.fromState, singleTransition.toState));
                 }
                 singleTransitions.add(singleTransition);
             }
         }
+    }
+
+    public <R extends StateContainer<S>> R transition(R container, S toState) {
+        return transition(container, toState, null);
     }
 
     public <R extends StateContainer<S>> R transition(R container, S toState, Function<R, R> onTransitioned) {
