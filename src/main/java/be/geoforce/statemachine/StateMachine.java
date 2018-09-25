@@ -12,7 +12,7 @@ import java.util.Set;
 import java.util.function.Function;
 
 @RequiredArgsConstructor
-public class StateMachine<S, T extends Transition<S>> {
+public class StateMachine<S extends State, T extends Transition<S>> {
     private final ImmutableList<T> transitions;
     private final ApplicationEventPublisher applicationEventPublisher;
 
@@ -23,9 +23,14 @@ public class StateMachine<S, T extends Transition<S>> {
             for (S fromState : transition.getFrom()) {
                 SingleTransition<S, T> singleTransition = new SingleTransition<>(fromState, transition.getTo(), transition);
                 if (singleTransitions.contains(singleTransition)) {
+                    // check if there isn't already a transition between these states
                     throw new IllegalStateException(
                             String.format("Ambiguous transition from {} to {}, there is another transitions between these states",
                                     singleTransition.fromState, singleTransition.toState));
+                }
+                if (fromState.isFinal()) {
+                    // from state can not not be a final state
+                    throw new IllegalStateException(String.format("Transition found from state '{}' which is marked as final", fromState));
                 }
                 singleTransitions.add(singleTransition);
             }
@@ -72,7 +77,7 @@ public class StateMachine<S, T extends Transition<S>> {
 
 
     @Value
-    private static final class SingleTransition<S, T extends Transition<S>> {
+    private static final class SingleTransition<S extends State, T extends Transition<S>> {
         private final S fromState;
         private final S toState;
         @Getter
