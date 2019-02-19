@@ -1,5 +1,7 @@
 package be.geoforce.statemachine;
 
+import be.geoforce.statemachine.exceptions.IllegalConfigException;
+import be.geoforce.statemachine.exceptions.IllegalTransitionException;
 import com.google.common.collect.ImmutableList;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -8,29 +10,37 @@ import org.springframework.context.ApplicationEventPublisher;
 
 import javax.annotation.PostConstruct;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
 
 @RequiredArgsConstructor
 public class StateMachine<S extends State, T extends Transition<S>> {
-    private final ImmutableList<T> transitions;
+    private final List<T> transitions;
     private final ApplicationEventPublisher applicationEventPublisher;
 
     @PostConstruct
     private void validateTransitions() {
-        Set<SingleTransition<S, T>> singleTransitions = new HashSet<>();
+        Set<SingleTransition<S>> singleTransitions = new HashSet<>();
         for (T transition : transitions) {
             for (S fromState : transition.getFrom()) {
-                SingleTransition<S, T> singleTransition = new SingleTransition<>(fromState, transition.getTo(), transition);
+                SingleTransition<S> singleTransition = new SingleTransition<>(fromState, transition.getTo());
+
+                // check if there isn't already a transition between these states
                 if (singleTransitions.contains(singleTransition)) {
-                    // check if there isn't already a transition between these states
-                    throw new IllegalStateException(
-                            String.format("Ambiguous transition from {} to {}, there is another transitions between these states",
+                    throw new IllegalConfigException(
+                            String.format("Ambiguous transition from %s to %s, there is another transitions between these states",
                                     singleTransition.fromState, singleTransition.toState));
                 }
-                if (fromState.isFinal()) {
-                    // from state can not not be a final state
-                    throw new IllegalStateException(String.format("Transition found from state '{}' which is marked as final", fromState));
+
+                // from state can not not be a final state
+                if (fromState.isFinalState()) {
+                    throw new IllegalConfigException(String.format("Transition found from state '%s' which is marked as final", fromState));
+                }
+
+                // from and to state can not be the same
+                if (fromState.equals(singleTransition.getToState())) {
+                    throw new IllegalConfigException(String.format("From state can not be equal to to destination state '%s'", singleTransition.getToState()));
                 }
                 singleTransitions.add(singleTransition);
             }
@@ -49,7 +59,7 @@ public class StateMachine<S extends State, T extends Transition<S>> {
         S beforeState = container.getState();
         T transition = findTransition(beforeState, toState);
         if (transition == null) {
-            throw new IllegalStateException(String.format("Can not transition from {} to {}", beforeState, toState));
+            throw new IllegalTransitionException(String.format("Can not transition from %s to %s", beforeState, toState));
         }
         TransitionEvent beforeEvent = createEvent(TransitionEvent.TransitionEventType.BEFORE, container, beforeState, transition);
         applicationEventPublisher.publishEvent(beforeEvent);
@@ -77,24 +87,8 @@ public class StateMachine<S extends State, T extends Transition<S>> {
 
 
     @Value
-    private static final class SingleTransition<S extends State, T extends Transition<S>> {
+    private static final class SingleTransition<S extends State> {
         private final S fromState;
         private final S toState;
-        @Getter
-        private final T transition;
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-            SingleTransition<S, T> that = (SingleTransition<S, T>) o;
-            return com.google.common.base.Objects.equal(fromState, that.fromState) &&
-                    com.google.common.base.Objects.equal(toState, that.toState);
-        }
-
-        @Override
-        public int hashCode() {
-            return com.google.common.base.Objects.hashCode(fromState, toState);
-        }
     }
 }
