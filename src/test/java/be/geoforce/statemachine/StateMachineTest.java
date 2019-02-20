@@ -11,7 +11,6 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.context.ApplicationEventPublisher;
 
@@ -51,13 +50,45 @@ public class StateMachineTest {
     }
 
     @Test
-    public void applyUnknownTransition() {
+    public void transitionToValidState() {
+        Order order = new Order(OrderState.AWAITING_PAYMENT);
+
+        Order result = orderStateMachine.transition(order, OrderState.PAID);
+        assertThat(result.getState()).isEqualTo(OrderState.PAID);
+    }
+
+    @Test
+    public void transitionToInValidState() {
         Order order = new Order(OrderState.CANCELLED);
 
         expectedException.expect(IllegalTransitionException.class);
         expectedException.expectMessage("Can not transition from CANCELLED to PAID");
 
         orderStateMachine.transition(order, OrderState.PAID);
+
+        verify(eventPublisher, never()).publishEvent(any(TransitionEvent.class));
+        assertThat(order.getState()).isEqualTo(OrderState.CANCELLED);
+    }
+
+    @Test
+    public void transitionWithNullContainer() {
+        Order order = new Order(OrderState.CANCELLED);
+
+        expectedException.expect(IllegalArgumentException.class);
+
+        orderStateMachine.transition(null, OrderState.PAID);
+
+        verify(eventPublisher, never()).publishEvent(any(TransitionEvent.class));
+        assertThat(order.getState()).isEqualTo(OrderState.CANCELLED);
+    }
+
+    @Test
+    public void transitionWithNullToState() {
+        Order order = new Order(OrderState.CANCELLED);
+
+        expectedException.expect(IllegalArgumentException.class);
+
+        orderStateMachine.transition(order, null);
 
         verify(eventPublisher, never()).publishEvent(any(TransitionEvent.class));
         assertThat(order.getState()).isEqualTo(OrderState.CANCELLED);

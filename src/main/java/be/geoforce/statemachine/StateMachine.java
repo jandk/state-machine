@@ -2,21 +2,18 @@ package be.geoforce.statemachine;
 
 import be.geoforce.statemachine.exceptions.IllegalConfigException;
 import be.geoforce.statemachine.exceptions.IllegalTransitionException;
-import com.google.common.collect.ImmutableList;
-import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Value;
 import org.springframework.context.ApplicationEventPublisher;
 
 import javax.annotation.PostConstruct;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
 
 @RequiredArgsConstructor
 public class StateMachine<S extends State, T extends Transition<S>> {
-    private final List<T> transitions;
+    private final Set<T> transitions;
     private final ApplicationEventPublisher applicationEventPublisher;
 
     @PostConstruct

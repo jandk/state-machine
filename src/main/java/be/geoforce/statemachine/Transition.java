@@ -1,8 +1,8 @@
 package be.geoforce.statemachine;
 
-import com.google.common.collect.ImmutableSet;
+import java.util.Set;
 
 public interface Transition<S extends State> {
-    ImmutableSet<S> getFrom();
+    Set<S> getFrom();
     S getTo();
 }
