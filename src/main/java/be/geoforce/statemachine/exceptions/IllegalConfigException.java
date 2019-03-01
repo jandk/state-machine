@@ -1,9 +1,8 @@
 package be.geoforce.statemachine.exceptions;
 
-import lombok.NoArgsConstructor;
-
-@NoArgsConstructor
 public class IllegalConfigException extends RuntimeException {
+    public IllegalConfigException() {
+    }
 
     public IllegalConfigException(String message) {
         super(message);
