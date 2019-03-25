@@ -11,7 +11,7 @@ import java.util.function.Function;
 import static be.geoforce.statemachine.TransitionEvent.TransitionEventType.AFTER;
 import static be.geoforce.statemachine.TransitionEvent.TransitionEventType.BEFORE;
 
-public final class StateMachine<S extends State, T> {
+public final class StateMachine<S, T> {
     private final Map<S, Map<T, S>> transitions;
     private final Consumer<TransitionEvent<S, T, ?>> beforeConsumer;
     private final Consumer<TransitionEvent<S, T, ?>> afterConsumer;
@@ -65,7 +65,7 @@ public final class StateMachine<S extends State, T> {
             .findFirst().orElse(null);
     }
 
-    public static <S extends State, T> StateMachineBuilder<S, T> builder() {
+    public static <S, T> StateMachineBuilder<S, T> builder() {
         return new StateMachineBuilder<>();
     }
 

@@ -1,5 +1,8 @@
 package be.geoforce.statemachine.mock;
 
 public enum OrderTransition {
-    PROCESS, READY, PAY, CANCEL
+    PROCESS,
+    READY,
+    PAY,
+    CANCEL
 }

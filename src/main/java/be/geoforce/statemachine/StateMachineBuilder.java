@@ -9,7 +9,7 @@ import java.util.function.Consumer;
 
 import static java.util.Objects.requireNonNull;
 
-public final class StateMachineBuilder<S extends State, T> {
+public final class StateMachineBuilder<S, T> {
     private final Map<S, Map<T, S>> transitions = new HashMap<>();
     private Consumer<TransitionEvent<S, T, ?>> beforeConsumer;
     private Consumer<TransitionEvent<S, T, ?>> afterConsumer;
